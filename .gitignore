@@ -1,0 +1,6 @@
+__pycache__
+.session.vim
+*.csv
+*.db
+*.json
+*.log
