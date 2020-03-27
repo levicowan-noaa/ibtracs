@@ -208,35 +208,39 @@ class Ibtracs:
         c.execute(f'DROP TABLE IF EXISTS {self.tablename}')
         c.execute(f"""
             CREATE TABLE {self.tablename}(
-                ID CHAR(13),
-                ATCF_ID CHAR(8),
-                name VARCHAR,
-                season INT,
-                basin CHAR(2),
-                subbasin CHAR(2),
-                lat FLOAT,
-                lon FLOAT,
-                time DATETIME,
-                wind INT,
-                mslp INT,
-                classification CHAR(2),
-                speed FLOAT,
-                genesis DATETIME,
-                agency VARCHAR
+                ID CHAR(13),      ATCF_ID CHAR(8),
+                name VARCHAR,     season INT,
+                basin CHAR(2),    subbasin CHAR(2),
+                lat FLOAT,        lon FLOAT,
+                time DATETIME,    wind INT,
+                mslp INT,         classification CHAR(2),
+                speed FLOAT,      genesis DATETIME,
+                agency VARCHAR,   R34_SE FLOAT,
+                R34_NE FLOAT,     R34_SW FLOAT,
+                R34_NW FLOAT,     R50_SE FLOAT,
+                R50_NE FLOAT,     R50_SW FLOAT,
+                R50_NW FLOAT,     R64_SE FLOAT,
+                R64_NE FLOAT,     R64_SW FLOAT,
+                R64_NW FLOAT
         )""")
         self.db.commit()
 
         # Insert each track point as a row
         rows = []
+        radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
         for tc in self.storms:
             genesis = tc.genesis.strftime('%Y-%m-%d %H:%M:%S')
             for i in range(len(tc.times)):
                 t = tc.times[i].item().strftime('%Y-%m-%d %H:%M:%S')
-                rows.append((
+                vals = (
                     tc.ID, tc.ATCF_ID, tc.name, tc.season, tc.basins[i], tc.subbasins[i],
                     tc.lats[i], tc.lons[i], t, tc.wind[i], tc.mslp[i],
                     tc.classifications[i], tc.speed[i], genesis, tc.agencies[i]
-                ))
+                )
+                # Wind radii values
+                rvals = tuple(getattr(tc, attr)[i] for attr in radii_attrs)
+                row = vals + rvals
+                rows.append(row)
         logger.info(f'Inserting {len(rows)} rows into database...')
         c.executemany(f'INSERT INTO {self.tablename} VALUES ({",".join("?"*len(rows[0]))})', rows)
         self.db.commit()

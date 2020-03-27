@@ -49,12 +49,15 @@ class Storm:
         dtypes = {
             'lats': float, 'lons': float, 'times': 'datetime64[m]', 'classifications': 'U2',
             'wind': float, 'mslp': float, 'speed': float, 'basins': 'U2',
-            'subbasins': 'U2', 'agencies': 'U10'
+            'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
+            'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
+            'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
+            'R64_SW': float, 'R64_NW': float
         }
         # Initialize arrays
         for arrname, dtype in dtypes.items():
             if dtype is float:
-                setattr(self, arrname, np.nan*np.empty(len(lines), dtype=dtype))
+                setattr(self, arrname, np.full(len(lines), fill_value=np.nan, dtype=dtype))
             else:
                 setattr(self, arrname, np.empty(len(lines), dtype=dtype))
         # Populate arrays
@@ -68,14 +71,14 @@ class Storm:
             self.lons[i] = float(fields[9])
             time = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
             self.times[i] = time
-            # Forward speed (km/h)
+            # Forward speed (kt)
             if i > 0:
                p1 = (self.lats[i-1], self.lons[i-1])
                p2 = (self.lats[i], self.lons[i])
-               dx = earthdist(p1, p2)
+               dx = 0.539957*earthdist(p1, p2) # nm
                # Seconds since last ob
                dt = int((self.times[i] - self.times[i-1]).item().total_seconds())
-               self.speed[i] = 3600*dx/dt if dt > 0 else np.nan # km/h
+               self.speed[i] = 3600*dx/dt if dt > 0 else np.nan # kt
             # Storm classification (see Ibtracs.possible_classifications)
             self.classifications[i] = fields[7]
             # Max wind in kt
@@ -84,6 +87,13 @@ class Storm:
             # MSLP in hPa
             mslp = float(fields[11] or np.nan)
             self.mslp[i] = mslp if mslp > 0 else np.nan
+            # Wind radii (nm) as determined by a USA agency, if available
+            radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
+            for j, attr in enumerate(radii_attrs):
+                # First column of radii information (R34_SE) is 26
+                r = float(fields[26+j] or np.nan) # nm
+                # Assign to array
+                getattr(self, attr)[i] = r
 
         # Exclude any track point not at a standard 6-hourly time, since such points
         # almost always have missing or interpolated information
@@ -162,7 +172,10 @@ class Storm:
         dtypes = {
             'lats': float, 'lons': float, 'times': 'datetime64[m]', 'classifications': 'U2',
             'wind': float, 'mslp': float, 'speed': float, 'basins': 'U2',
-            'subbasins': 'U2', 'agencies': 'U10'
+            'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
+            'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
+            'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
+            'R64_SW': float, 'R64_NW': float
         }
         self.lats = np.array(data['lat'], dtype=dtypes['lats'])
         self.lons = np.array(data['lon'], dtype=dtypes['lons'])
@@ -170,11 +183,15 @@ class Storm:
                                for tstr in data['time']], dtype=dtypes['times'])
         self.wind = np.array(data['wind'], dtype=dtypes['wind'])
         self.mslp = np.array(data['mslp'], dtype=dtypes['mslp'])
-        self.classification = np.array(data['classification'], dtype=dtypes['classifications'])
+        self.classifications = np.array(data['classification'], dtype=dtypes['classifications'])
         self.speed = np.array(data['speed'], dtype=dtypes['speed'])
         self.basins = np.array(data['basin'], dtype=dtypes['basins'])
         self.subbasins = np.array(data['subbasin'], dtype=dtypes['subbasins'])
         self.agencies = np.array(data['agency'], dtype=dtypes['agencies'])
+        # Wind radii
+        radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
+        for attr in radii_attrs:
+            setattr(self, attr, np.array(data[attr], dtype=dtypes[attr]))
 
     def _parse_json(self, data):
         """Parse a JSON representation of a single storm created by Storm.to_json()"""
@@ -183,7 +200,10 @@ class Storm:
         dtypes = {
             'lats': float, 'lons': float, 'times': 'datetime64[m]', 'classifications': 'U2',
             'wind': float, 'mslp': float, 'speed': float, 'basins': 'U2',
-            'subbasins': 'U2', 'agencies': 'U10'
+            'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
+            'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
+            'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
+            'R64_SW': float, 'R64_NW': float
         }
         # Assign attributes
         for key, values in data.items():
