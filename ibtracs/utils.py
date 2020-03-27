@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import sys
-
-
-def progressbar(progress):
-    """
-    Display a progress bar in stdout.
-    Input is a float between 0 and 1 indicating progress.
-    """
-    sys.stdout.write("\r\tProgress: [{0:50s}] {1:.1f}% ".format('#'*int(progress * 50), progress*100))
-    sys.stdout.flush()
 
 
 def earthdist(p1, p2):
