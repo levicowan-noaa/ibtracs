@@ -69,7 +69,9 @@ for row in I.db.execute(query):
 > ('EMILY', '2005-07-11 00:00:00')
 > ...
 
-# The IBTrACS database can also be written out into JSON files, stored in {I.datadir}/json. These can be easily read by javascript in web applications, and provide a readable serialization format for the TC objects.
+# The IBTrACS database can also be written out into JSON files, stored in {I.datadir}/json.
+# These can be easily read by javascript in web applications, and provide a
+# readable serialization format for the TC objects.
 I.save_to_json()
 # TCs can also be read in from the JSON files if they've been generated
 I.load_all_storms(source='json')
