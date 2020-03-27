@@ -4,9 +4,11 @@
 Setup data directory, download raw IBTrACS CSV file, and generate database
 """
 
-import os
-# Avoid relative import problem during install
-os.chdir(os.environ['HOME'])
+import os, sys
+# Ensure we import the *installed* ibtracs package, not file from local git repo
+thisdir = os.path.dirname(os.path.realpath(__file__))
+if thisdir in sys.path:
+    sys.path.remove(thisdir)
 from ibtracs import Ibtracs
 from urllib.request import urlopen
 
@@ -33,6 +35,7 @@ with urlopen(url) as rf:
             retrieved += len(chunk)
             lf.write(chunk.decode('utf-8'))
             progressbar(retrieved/size)
+        print()
 
 # Create database
 I.load_all_storms(source='csv')
