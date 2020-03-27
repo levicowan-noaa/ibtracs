@@ -83,6 +83,6 @@ I.save_to_db()
 # If you ever want to read/modify/replace the data files directly
 print(I.datadir)
 
-# View all attributes and methods available on the Ibtracs object
-print(dir(I))
+# View all attributes and methods available on the Ibtracs object (I)
+print([a for a in dir(I) if not a.startswith('_')])
 ```
