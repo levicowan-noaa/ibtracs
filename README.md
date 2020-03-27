@@ -17,11 +17,9 @@ python setup.py install
 
 This will download the IBTrACS v4r00 CSV file from NCEI (URL will need updating when new dataset versions get released). The file will then get parsed, and an SQlite database will be created. This database is ~39MB in size, compared to the ~290MB CSV file, and much faster to read/parse.
 
-## Usage in a Python script
+## Usage in a Python script or interactive interpreter
 
 ```
-#!/usr/bin/env python3
-
 from ibtracs import Ibtracs
 I = Ibtracs()
 
@@ -43,11 +41,13 @@ for t, vmax in zip(tc.times, tc.wind):
 print(vars(tc).keys())
 > dict_keys(['ID', 'ATCF_ID', 'name', 'season', 'basin', 'subbasin', 'genesis', 'lats', 'lons', 'times', 'wind', 'mslp', 'classification', 'speed', 'basins', 'subbasins', 'agencies'])
 
-# Load TCs in bulk for filtering, etc.
+# Load TCs in bulk for filtering, etc. (populates I.storms with Storm objects)
 I.load_all_storms()
+
 # Select all North Atlantic TCs from the 2005 season
 TCs = [tc for tc in I.storms if tc.basin == 'NA' and tc.season == 2005]
-# Sort by genesis time
+
+# Sort by genesis time and print some info
 TCs.sort(key=lambda tc: tc.genesis)
 for tc in TCs:
     print(tc.name, tc.genesis)
@@ -80,4 +80,7 @@ I.save_to_db()
 
 # If you ever want to read/modify/replace the data files directly
 print(I.datadir)
+
+# View all attributes and methods available on the Ibtracs object
+print(dir(I))
 ```
