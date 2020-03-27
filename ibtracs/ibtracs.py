@@ -26,7 +26,6 @@ def initial_setup():
     datadir = os.path.join(workdir, 'data')
     if not os.path.exists(datadir):
         os.makedirs(datadir, 0o755)
-    logger.info('Downloading raw IBTrACS CSV file from NCEI...')
     url = 'https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.ALL.list.v04r00.csv'
     filename = os.path.join(datadir, 'ibtracs.csv')
     with urlopen(url) as rf:
@@ -34,6 +33,7 @@ def initial_setup():
             size = int(rf.getheader('Content-length'))
             retrieved = 0
             chunksize = 1024
+            logger.info(f'Downloading raw IBTrACS CSV file from NCEI ({size/1024:.1f}MB...')
             while True:
                 chunk = rf.read(chunksize)
                 if not chunk:
