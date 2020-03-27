@@ -104,9 +104,12 @@ I.save_to_db()
 ### If you ever want to read/modify/replace the data files directly
 ```
 print(I.datadir)
+# Will be something similar to this
+> ${workdir}/anaconda3/envs/${envname}/lib/python3.7/site-packages/ibtracs/data
 ```
 
 ### View all attributes and methods available on the Ibtracs object (I)
 ```
 print([a for a in dir(I) if not a.startswith('_')])
+> ['datadir', 'db', 'db_filename', 'get_storm', 'load_all_storms', 'load_from_csv', 'load_from_db', 'load_from_json', 'possible_agencies', 'possible_basins', 'possible_classifications', 'possible_subbasins', 'resolve_duplicates', 'save_to_db', 'save_to_json', 'seasonACE', 'storms', 'tablename']
 ```
