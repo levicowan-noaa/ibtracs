@@ -22,11 +22,15 @@ This will download the IBTrACS v4r00 CSV file from NCEI (URL will need updating 
 ```
 from ibtracs import Ibtracs
 I = Ibtracs()
+```
 
-# Load a single TC from the SQL database into a Storm object
+### Load a single TC from the SQL database into a Storm object
+```
 tc = I.get_storm(name='katrina', season=2005, basin='NA')
+```
 
-# View some data from the TC:
+### View some data from the TC:
+```
 for t, vmax in zip(tc.times, tc.wind):
     print(t, vmax)
 > 2011-08-21T00:00 45.0
@@ -36,18 +40,26 @@ for t, vmax in zip(tc.times, tc.wind):
 > 2011-08-22T00:00 60.0
 > 2011-08-22T06:00 65.0
 > ...
+```
 
-# See all attributes and data variables available from the Storm object (using tc.{varname})
+### See all attributes and data variables available from the Storm object (using tc.{varname})
+```
 print(vars(tc).keys())
 > dict_keys(['ID', 'ATCF_ID', 'name', 'season', 'basin', 'subbasin', 'genesis', 'lats', 'lons', 'times', 'wind', 'mslp', 'classification', 'speed', 'basins', 'subbasins', 'agencies'])
+```
 
-# Load TCs in bulk for filtering, etc. (populates I.storms with Storm objects)
+### Load TCs in bulk for filtering, etc. (populates I.storms with Storm objects)
+```
 I.load_all_storms()
+```
 
-# Select all North Atlantic TCs from the 2005 season
+### Select all North Atlantic TCs from the 2005 season
+```
 TCs = [tc for tc in I.storms if tc.basin == 'NA' and tc.season == 2005]
+```
 
-# Sort by genesis time and print some info
+### Sort by genesis time and print some info
+```
 TCs.sort(key=lambda tc: tc.genesis)
 for tc in TCs:
     print(tc.name, tc.genesis)
@@ -57,8 +69,10 @@ for tc in TCs:
 > DENNIS 2005-07-04 18:00:00
 > EMILY 2005-07-11 00:00:00
 > ...
+```
 
-# Or use the SQLite database directly! Each track point is a row in the "storm" table
+### Or use the SQLite database directly! Each track point is a row in the "storm" table
+```
 query = 'SELECT DISTINCT name,genesis FROM storms WHERE season=2005 AND basin="NA" ORDER BY genesis'
 for row in I.db.execute(query):
     print(row)
@@ -68,21 +82,31 @@ for row in I.db.execute(query):
 > ('DENNIS', '2005-07-04 18:00:00')
 > ('EMILY', '2005-07-11 00:00:00')
 > ...
+```
 
-# The IBTrACS database can also be written out into JSON files, stored in {I.datadir}/json.
-# These can be easily read by javascript in web applications, and provide a
-# readable serialization format for the TC objects.
+### The IBTrACS database can also be written out into JSON files, stored in {I.datadir}/json.
+These can be easily read by javascript in web applications, and provide a readable serialization format for the TC objects.
+```
 I.save_to_json()
-# TCs can also be read in from the JSON files if they've been generated
-I.load_all_storms(source='json')
+```
 
-# If you need to remake the SQL database or re-parse the CSV file for any reason
+### TCs can also be read in from the JSON files if they've been generated
+```
+I.load_all_storms(source='json')
+```
+
+### If you need to remake the SQL database or re-parse the CSV file for any reason
+```
 I.load_all_storms(source='csv')
 I.save_to_db()
+```
 
-# If you ever want to read/modify/replace the data files directly
+### If you ever want to read/modify/replace the data files directly
+```
 print(I.datadir)
+```
 
-# View all attributes and methods available on the Ibtracs object (I)
+### View all attributes and methods available on the Ibtracs object (I)
+```
 print([a for a in dir(I) if not a.startswith('_')])
 ```
