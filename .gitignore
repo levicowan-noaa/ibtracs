@@ -1,4 +1,5 @@
 __pycache__
+build
 .session.vim
 *.csv
 *.db

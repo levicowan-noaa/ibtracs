@@ -1,14 +1,15 @@
-__all__ = ['Ibtracs']
+__all__ = ['Ibtracs', 'initial_setup']
 
 from .storm import Storm
+from .utils import progressbar
 import logging
 import numpy as np
 import os, sys
-from pathlib import Path
 import sqlite3
+from urllib.request import urlopen
 
-# Default working directory is the parent directory of this file
-workdir = Path(os.path.dirname(__file__)).parent.as_posix()
+# Default working directory is the parent directory of this file (package root)
+workdir = os.path.dirname(__file__)
 # Setup logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=os.path.join(workdir, 'ibtracs.log'), level=logging.INFO)
@@ -18,6 +19,28 @@ logger.addHandler(handler)
 def exc_hook(Type, value, tb):
     logger.exception(msg='', exc_info=(Type, value, tb))
 sys.excepthook = exc_hook
+
+
+def initial_setup():
+    """Download raw IBTrACS CSV file and set up data directory"""
+    datadir = os.path.join(workdir, 'data')
+    if not os.path.exists(datadir):
+        os.makedirs(datadir, 0o755)
+    logger.info('Downloading raw IBTrACS CSV file from NCEI...')
+    url = 'https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.ALL.list.v04r00.csv'
+    filename = os.path.join(datadir, 'ibtracs.csv')
+    with urlopen(url) as rf:
+        with open(filename, 'w') as lf:
+            size = int(rf.getheader('Content-length'))
+            retrieved = 0
+            chunksize = 1024
+            while True:
+                chunk = rf.read(chunksize)
+                if not chunk:
+                    break
+                retrieved += len(chunk)
+                lf.write(chunk.decode('utf-8'))
+                progressbar(retrieved/size)
 
 
 class Ibtracs:
@@ -201,7 +224,7 @@ class Ibtracs:
         """
         if not self.storms:
             logger.info('Parsing storm data...')
-            self.load_all_storms()
+            self.load_all_storms(source='csv')
         c = self.db.cursor()
         # Create storm table. If it already exists, replace it.
         c.execute(f'DROP TABLE IF EXISTS {self.tablename}')
