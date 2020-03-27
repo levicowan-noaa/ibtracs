@@ -10,7 +10,8 @@ import sqlite3
 workdir = os.path.dirname(__file__)
 # Setup logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename=os.path.join(workdir, 'ibtracs.log'), level=logging.INFO)
+logfile = os.path.join(workdir, 'ibtracs.log')
+logging.basicConfig(filename=logfile, level=logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
 # Create custom hook for uncaught exceptions
@@ -54,6 +55,7 @@ class Ibtracs:
                         'newdelhi', 'reunion', 'tokyo', 'wellington']
 
     def __init__(self):
+        self.logfile = logfile
         self.datadir = os.path.join(workdir, 'data')
         if not os.path.exists(self.datadir):
             os.makedirs(self.datadir, 0o755)

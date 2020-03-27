@@ -113,3 +113,8 @@ print(I.datadir)
 print([a for a in dir(I) if not a.startswith('_')])
 > ['datadir', 'db', 'db_filename', 'get_storm', 'load_all_storms', 'load_from_csv', 'load_from_db', 'load_from_json', 'possible_agencies', 'possible_basins', 'possible_classifications', 'possible_subbasins', 'resolve_duplicates', 'save_to_db', 'save_to_json', 'seasonACE', 'storms', 'tablename']
 ```
+
+### Get log file path
+```
+print(I.logfile)
+```
