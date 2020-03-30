@@ -61,7 +61,7 @@ print(tc.metadata)
 I.load_all_storms()
 ```
 
-### Select all North Atlantic TCs from the 2005 season and passing through the box 20-30N, 80-100W
+### Select all North Atlantic TCs from the 2005 season passing through the box 20-30N, 80-100W
 ```
 TCs = [tc for tc in I.storms if tc.basin == 'NA' and tc.season == 2005
        and tc.intersect_box((20, 30, 260, 280))]
