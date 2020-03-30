@@ -20,7 +20,7 @@ def earthdist(p1, p2):
     R = 6371
     # Given coordinates in radians
     lat1, lon1 = np.radians(p1[0]), np.radians(p1[1])
-    lat2, lon2 = np.radians(p2[0]); np.radians(p2[1])
+    lat2, lon2 = np.radians(p2[0]), np.radians(p2[1])
     # Compute distance
     arg = np.sin(lat1)*np.sin(lat2) + np.cos(lat1)*np.cos(lat2)*np.cos(np.abs(lon2-lon1))
     # Floating-point error may result in a slightly out-of-bounds
