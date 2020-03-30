@@ -301,10 +301,10 @@ class Storm:
         for i,v in enumerate(wind):
             if subtropical:
                 conditions = [v >= 34, self.classifications[i] not in ('ET',),
-                              self.times[i].hour % 6 == 0, self.times[i].minute == 0]
+                              self.times[i].item().hour % 6 == 0, self.times[i].item().minute == 0]
             else:
                 conditions = [v >= 34, self.classifications[i] not in ('ET','SS'),
-                              self.times[i].hour % 6 == 0, self.times[i].minute == 0]
+                              self.times[i].item().hour % 6 == 0, self.times[i].item().minute == 0]
             if all(conditions):
                 v2.append(v**2)
         ace = 1e-4 * np.sum(v2)
@@ -318,7 +318,6 @@ class Storm:
         A position exactly on the boundary is counted as inside.
 
         Args:
-            storm:  The Storm object
             coords: Sequence of coordinates given as [lat0, lat1, lon0, lon1]
                     defining the region to test. Lons should be given in [0,360]
 
@@ -332,7 +331,7 @@ class Storm:
             # Start with the previous known position
             hourlypos.append((self.lats[i-1], self.lons[i-1]))
             # Time difference in hours:
-            dt = int((self.times[i] - self.times[i-1]).total_seconds()/3600)
+            dt = int((self.times[i] - self.times[i-1]).item().total_seconds()/3600)
             # Position change
             dlat = self.lats[i] - self.lats[i-1]
             dlon = self.lons[i] - self.lons[i-1]
@@ -350,37 +349,3 @@ class Storm:
         else:
             intersect = False
         return intersect
-
-
-def earthdist(p1, p2):
-    """
-    Calculate the great circle distance between two points on the Earth's surface.
-
-    Args:
-         p1 and p2 are tuples given as (lat,lon) pairs in degrees.
-         lat and lon may be numbers or arrays of multiple points.
-    Returns:
-         The distance between the two points in km. If lat and lon
-         are arrays, the return value is an array of the same length
-         containing the distances between each pair of points.
-    """
-    # Mean radius of the Earth in km
-    R = 6371
-    # Given coordinates in np.radians
-    lat1 = np.radians(p1[0]); lon1 = np.radians(p1[1])
-    lat2 = np.radians(p2[0]); lon2 = np.radians(p2[1])
-    # Compute distance
-    arg = np.sin(lat1)*np.sin(lat2) + np.cos(lat1)*np.cos(lat2)*np.cos(abs(lon2-lon1))
-    # Floating-point error may result in a slightly out-of-bounds
-    # argument for arcnp.cos (domain -1 to +1). Round all incorrect arguments
-    if type(arg) is np.ndarray:
-        arg[arg > 1] = 1
-        arg[arg < -1] = -1
-    else:
-        if arg > 1:
-            arg = 1
-        elif arg < -1:
-            arg = -1
-    central_angle = np.arccos(arg)
-    d = R*central_angle
-    return d
