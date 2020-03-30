@@ -15,7 +15,7 @@ cd /tmp/ibtracs
 python setup.py install
 ```
 
-This will download the IBTrACS v4r00 CSV file from NCEI (URL will need updating when new dataset versions get released). The file will then get parsed, and an SQlite database will be created. This database is ~44MB in size, compared to the ~297MB CSV file, and much faster to read/parse.
+This will download the IBTrACS v4r00 CSV file from NCEI (URL will need updating when new dataset versions get released). The file will then get parsed, and an SQLite database will be created. This database is ~44MB in size, compared to the ~297MB CSV file, and much faster to read/parse.
 
 ## Usage in a Python script or interactive interpreter
 
