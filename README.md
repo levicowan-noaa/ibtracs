@@ -56,14 +56,15 @@ print(tc.metadata)
 > ...
 ```
 
-### Load TCs in bulk for filtering, etc. (populates I.storms with Storm objects)
+### Load TCs in bulk for filtering, etc. (populates I.storms with all Storm objects)
 ```
 I.load_all_storms()
 ```
 
-### Select all North Atlantic TCs from the 2005 season
+### Select all North Atlantic TCs from the 2005 season and passing through the box 20-30N, 80-100W
 ```
-TCs = [tc for tc in I.storms if tc.basin == 'NA' and tc.season == 2005]
+TCs = [tc for tc in I.storms if tc.basin == 'NA' and tc.season == 2005
+       and tc.intersect_box((20, 30, 260, 280))]
 ```
 
 ### Sort by genesis time and print some info
@@ -81,7 +82,7 @@ for tc in TCs:
 
 ### Or use the SQLite database directly! Each track point is a row in the "storm" table
 ```
-query = 'SELECT DISTINCT name,genesis FROM storms WHERE season=2005 AND basin="NA" ORDER BY genesis'
+query = 'SELECT DISTINCT name,genesis FROM storms WHERE season=2005 AND basin="NA" AND lat>20 AND lat<30 AND lon>260 AND lon<280 ORDER BY genesis'
 for row in I.db.execute(query):
     print(row)
 > ('ARLENE', '2005-06-08 18:00:00')
