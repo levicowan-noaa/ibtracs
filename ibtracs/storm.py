@@ -12,8 +12,11 @@ logger = logging.getLogger(__name__)
 class Storm:
 
     metadata = {
-        'lats': {'units': 'degrees', 'description': 'TC latitude'},
-        'lons': {'units': 'degrees', 'description': 'TC longitude'},
+        'ID': {'units': None, 'description': 'unique ID assigned by IBTrACS'},
+        'ATCF_ID': {'units': None, 'description': 'ATCF ID, if available'},
+        'name': {'units': None, 'description': 'storm name or "NOT_NAMED"'},
+        'lats': {'units': 'degrees', 'description': 'storm latitude'},
+        'lons': {'units': 'degrees', 'description': 'storm longitude'},
         'times': {'units': 'numpy.datetime64[m]', 'description': 'observation time'},
         'classifications': {'units': None, 'description': ('storm classification (see '
                                                            'Ibtracs.possible_classifications)')},
@@ -21,11 +24,18 @@ class Storm:
                                                 '(averaging interval varies by agency)')},
         'mslp': {'units': 'hPa', 'description': 'central pressure'},
         'speed': {'units': 'kt', 'description': 'storm forward speed'},
+        'genesis': {'units': 'datetime.datetime', 'description': 'time of genesis'},
+        'basin': {'units': None, 'description': 'basin in which the storm formed'},
+        'subbasin': {'units': None, 'description': 'subbasin in which the storm formed'},
         'basins': {'units': None, 'description': 'basin identifier (see Ibtracs.possible_basins)'},
         'subbasins': {'units': None, 'description': 'subbasin identifier (see Ibtracs.possible_subbasins)'},
         'agencies': {'units': None, 'description': ('agency from which storm data is provided '
                                                     '(see Ibtracs.possible_agencies)')},
+        'season': {'units': None, 'description': ('For NHEM: year in which storm formed. '
+                                                  'For SHEM: the latter year spanned by the '
+                                                  'July-June season in which the storm formed.')},
     }
+    # Add wind radii descriptions in bulk
     radii_attrs = {f'R{v}_{q}': (v, q) for v in (34,50,64) for q in ('NE','SE','SW','NW')}
     for attr, (v, q) in radii_attrs.items():
         metadata[attr] = {'units': 'nm', 'description': (f'{v} kt wind radii in the {q} quadrant '
