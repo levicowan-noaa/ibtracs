@@ -284,30 +284,21 @@ class Storm:
         had winds >=34 kt and was not extratropical. Subtropical points may
         optionally be excluded.
 
-        For RSMCs that use 10-minute wind, ACE is computed using an estimate
-        of the corresponding 1-minute wind.
+        Warning: some non-US agencies do not use 1-minute wind, and ACE is technically
+        defined for 1-minute wind.
 
         Args:
             subtropical: If True (default), count subtropical points in
                          the ACE calculation.
         """
-        # Estimate 1-minute winds if 10-minute winds are used in this basin
-        # Note that RSMC New Delhi uses 3-min winds, but there is no conversion
-        if self.basin not in ('EP','NA','NI','SA'):
-           wind = [v/0.88 for v in self.wind]
-        else:
-           wind = self.wind
         v2 = []
-        for i,v in enumerate(wind):
-            if subtropical:
-                conditions = [v >= 34, self.classifications[i] not in ('ET',),
-                              self.times[i].item().hour % 6 == 0, self.times[i].item().minute == 0]
-            else:
-                conditions = [v >= 34, self.classifications[i] not in ('ET','SS'),
-                              self.times[i].item().hour % 6 == 0, self.times[i].item().minute == 0]
+        classification_blacklist = ('ET','DS') if subtropical else ('ET','DS','SS')
+        for t, v, c in zip(self.times, self.wind, self.classifications):
+            t = t.item() # Get datetime object
+            conditions = [v >= 34, c not in classification_blacklist, t.hour % 6 == 0, t.minute == 0]
             if all(conditions):
                 v2.append(v**2)
-        ace = 1e-4 * np.sum(v2)
+        ace = 1e-4 * sum(v2)
         return ace
 
     def intersect_box(self, coords):
