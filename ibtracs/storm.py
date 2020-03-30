@@ -10,6 +10,28 @@ logger = logging.getLogger(__name__)
 
 
 class Storm:
+
+    metadata = {
+        'lats': {'units': 'degrees', 'description': 'TC latitude'},
+        'lons': {'units': 'degrees', 'description': 'TC longitude'},
+        'times': {'units': 'numpy.datetime64[m]', 'description': 'observation time'},
+        'classifications': {'units': None, 'description': ('storm classification (see '
+                                                           'Ibtracs.possible_classifications)')},
+        'wind': {'units': 'kt', 'description': ('maximum sustained wind '
+                                                '(averaging interval varies by agency)')},
+        'mslp': {'units': 'hPa', 'description': 'central pressure'},
+        'speed': {'units': 'kt', 'description': 'storm forward speed'},
+        'basins': {'units': None, 'description': 'basin identifier (see Ibtracs.possible_basins)'},
+        'subbasins': {'units': None, 'description': 'subbasin identifier (see Ibtracs.possible_subbasins)'},
+        'agencies': {'units': None, 'description': ('agency from which storm data is provided '
+                                                    '(see Ibtracs.possible_agencies)')},
+    }
+    radii_attrs = {f'R{v}_{q}': (v, q) for v in (34,50,64) for q in ('NE','SE','SW','NW')}
+    for attr, (v, q) in radii_attrs.items():
+        metadata[attr] = {'units': 'nm', 'description': (f'{v} kt wind radii in the {q} quadrant '
+                                                         '(from USA-based agencies only, if '
+                                                         'available)')}
+
     def __init__(self, data, datatype='csv'):
         """
         Class for parsing information about a specific TC from the IBTrACS database.

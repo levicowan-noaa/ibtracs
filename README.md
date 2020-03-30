@@ -1,6 +1,6 @@
 # Python IBTrACS API
 
-A Python interface to the IBTrACS tropical cyclone best track dataset.
+A Python interface to the IBTrACS tropical cyclone best track dataset. Only 6-hourly synoptic times are included. The WMO-sanctioned agency is used for each basin. Note that for the Atlantic and eastern Pacific, this data is the same as HURDAT.
 
 ## Dependencies
 - Numpy >= 1.7
@@ -45,7 +45,15 @@ for t, vmax in zip(tc.times, tc.wind):
 ### See all attributes and data variables available from the Storm object (using tc.{varname})
 ```
 print(vars(tc).keys())
-> dict_keys(['ID', 'ATCF_ID', 'name', 'season', 'basin', 'subbasin', 'genesis', 'lats', 'lons', 'times', 'wind', 'mslp', 'classification', 'speed', 'basins', 'subbasins', 'agencies'])
+> dict_keys(['ID', 'ATCF_ID', 'name', 'season', 'basin', 'subbasin', 'genesis', 'lats', 'lons', 'times', 'wind', 'mslp', 'classifications', 'speed', 'basins', 'subbasins', 'agencies', 'R34_NE', 'R34_SE', 'R34_SW', 'R34_NW', 'R50_NE', 'R50_SE', 'R50_SW', 'R50_NW', 'R64_NE', 'R64_SE', 'R64_SW', 'R64_NW'])
+```
+
+### View units and description of TC attributes
+```
+print(tc.metadata)
+> {'lats': {'units': 'degrees', 'description': 'TC latitude'},
+>  'classifications': {'units': None, 'description': 'storm classification (see Ibtracs.possible_classifications)'},
+> ...
 ```
 
 ### Load TCs in bulk for filtering, etc. (populates I.storms with Storm objects)
