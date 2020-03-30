@@ -71,12 +71,13 @@ TCs = [tc for tc in I.storms if tc.basin == 'NA' and tc.season == 2005
 ```
 TCs.sort(key=lambda tc: tc.genesis)
 for tc in TCs:
-    print(tc.name, tc.genesis)
-> ARLENE 2005-06-08 18:00:00
-> BRET 2005-06-28 18:00:00
-> CINDY 2005-07-03 18:00:00
-> DENNIS 2005-07-04 18:00:00
-> EMILY 2005-07-11 00:00:00
+    ace = tc.ACE(subtropical=True)
+    print(f'{tc.name}, genesis={tc.genesis}, ACE={ace:.1f}')
+> ARLENE, genesis=2005-06-08 18:00:00, ACE=2.6
+> BRET, genesis=2005-06-28 18:00:00, ACE=0.4
+> CINDY, genesis=2005-07-03 18:00:00, ACE=1.5
+> DENNIS, genesis=2005-07-04 18:00:00, ACE=18.8
+> EMILY, genesis=2005-07-11 00:00:00, ACE=32.9
 > ...
 ```
 
