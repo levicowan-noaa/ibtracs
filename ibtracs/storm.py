@@ -277,6 +277,29 @@ class Storm:
                 setattr(self, attr, values[idx_keep])
         return self
 
+    def data_at_time(self, t):
+        """
+        Get storm data at a particular time. If no data is available at the requested
+        time, a ValueError is raised.
+
+        Args:
+            t: Datetime object at which we want storm data
+
+        Returns:
+            Dictionary like {'lat': 29, 'lon': 261, 'wind': 35, ...}
+            mapping attributes to values at the requested time
+        """
+        if t not in self.times:
+            raise ValueError(f'No data found at {t}')
+        data = {}
+        i = np.where(self.times == t)[0][0]
+        for attr, values in self.__dict__.items():
+            if type(values) in (np.ndarray, list):
+                data[attr] = values[i]
+            else:
+                data[attr] = values
+        return data
+
     def ACE(self, subtropical=True):
         """
         Compute the Accumulated Cyclone Energy index over the storm's lifetime

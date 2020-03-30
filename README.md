@@ -56,6 +56,14 @@ print(tc.metadata)
 > ...
 ```
 
+### Select storm data from a particular time
+```
+from datetime import datetime
+t = datetime(2005, 8, 29, 12)
+print(tc.data_at_time(t))
+> {'lats': 29.5, 'lons': 270.4, 'wind': 110.0, 'mslp': 923.0, 'times': numpy.datetime64('2005-08-29T12:00'), ...}
+```
+
 ### Load TCs in bulk for filtering, etc. (populates I.storms with all Storm objects)
 ```
 I.load_all_storms()
