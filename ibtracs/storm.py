@@ -75,6 +75,12 @@ class Storm:
     def __hash__(self):
         return hash((self.name, self.basin, self.season, self.lons[0], self.lats[0]))
 
+    def __repr__(self):
+        return f'Storm(name={self.name}, basin={self.basin}, maxwind={np.nanmax(self.wind):.0f} kt, genesis={self.genesis:%HZ %d %b %Y})'
+
+    def __str__(self):
+        return self.__repr__()
+
     def _parse_csv(self, lines):
         """Parse a list of lines from the IBTrACS CSV file associated with a single storm"""
         # Parse time-dependent attributes
