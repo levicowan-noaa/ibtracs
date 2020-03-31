@@ -10,7 +10,7 @@ A Python interface to the IBTrACS tropical cyclone best track dataset. Only 6-ho
 
 Ensure your desired Python environment is activated, then:
 ```
-git clone https:/www.github.com/levicowan/ibtracs /tmp/ibtracs
+git clone https://www.github.com/levicowan/ibtracs /tmp/ibtracs
 cd /tmp/ibtracs
 python setup.py install
 ```
