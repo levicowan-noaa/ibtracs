@@ -178,7 +178,7 @@ class Ibtracs:
             self.load_from_csv()
         else:
             raise ValueError(f'Unrecognized source: {source}')
-        # Sort storm list by season, basin, and genesis time
+        # Sort storm list by genesis time
         self.storms.sort(key=lambda tc: tc.genesis)
 
     def save_to_json(self):
