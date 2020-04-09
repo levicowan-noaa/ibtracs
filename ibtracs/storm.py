@@ -15,15 +15,16 @@ class Storm:
         'ID': {'units': None, 'description': 'unique ID assigned by IBTrACS'},
         'ATCF_ID': {'units': None, 'description': 'ATCF ID, if available'},
         'name': {'units': None, 'description': 'storm name or "NOT_NAMED"'},
-        'lats': {'units': 'degrees', 'description': 'storm latitude'},
-        'lons': {'units': 'degrees', 'description': 'storm longitude'},
-        'times': {'units': 'numpy.datetime64[m]', 'description': 'observation time'},
-        'classifications': {'units': None, 'description': ('storm classification (see '
+        'lat': {'units': 'degrees', 'description': 'storm latitude'},
+        'lon': {'units': 'degrees', 'description': 'storm longitude'},
+        'time': {'units': 'numpy.datetime64[m]', 'description': 'observation time'},
+        'classification': {'units': None, 'description': ('storm classification (see '
                                                            'Ibtracs.possible_classifications)')},
         'wind': {'units': 'kt', 'description': ('maximum sustained wind '
                                                 '(averaging interval varies by agency)')},
         'mslp': {'units': 'hPa', 'description': 'central pressure'},
         'speed': {'units': 'kt', 'description': 'storm forward speed'},
+        'dist2land': {'units': 'km', 'description': 'distance to land'},
         'genesis': {'units': 'datetime.datetime', 'description': 'time of genesis'},
         'basin': {'units': None, 'description': 'basin in which the storm formed'},
         'subbasin': {'units': None, 'description': 'subbasin in which the storm formed'},
@@ -68,12 +69,12 @@ class Storm:
         # Have to compare starting TC location too since two TCs named "NOT_NAMED"
         # could form at the same time in the same basin
         comparisons = [self.name == other.name, self.basin == other.basin,
-                       self.season == other.season, np.isclose(self.lons[0], other.lons[0]),
-                       np.isclose(self.lats[0], other.lats[0])]
+                       self.season == other.season, np.isclose(self.lon[0], other.lon[0]),
+                       np.isclose(self.lat[0], other.lat[0])]
         return all(comparisons)
 
     def __hash__(self):
-        return hash((self.name, self.basin, self.season, self.lons[0], self.lats[0]))
+        return hash((self.name, self.basin, self.season, self.lon[0], self.lat[0]))
 
     def __repr__(self):
         return f'Storm(name={self.name}, basin={self.basin}, maxwind={np.nanmax(self.wind):.0f} kt, genesis={self.genesis:%HZ %d %b %Y})'
@@ -85,8 +86,8 @@ class Storm:
         """Parse a list of lines from the IBTrACS CSV file associated with a single storm"""
         # Parse time-dependent attributes
         dtypes = {
-            'lats': float, 'lons': float, 'times': 'datetime64[m]', 'classifications': 'U2',
-            'wind': float, 'mslp': float, 'speed': float, 'basins': 'U2',
+            'lat': float, 'lon': float, 'time': 'datetime64[m]', 'classification': 'U2',
+            'wind': float, 'mslp': float, 'speed': float, 'dist2land': float, 'basins': 'U2',
             'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
             'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
             'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
@@ -104,27 +105,29 @@ class Storm:
             self.basins[i] = fields[3]
             self.subbasins[i] = fields[4]
             self.agencies[i] = fields[12]
-            self.lats[i] = float(fields[8])
+            self.lat[i] = float(fields[8])
             # longitude is in degrees east
-            self.lons[i] = float(fields[9])
+            self.lon[i] = float(fields[9])
             time = datetime.strptime(fields[6], '%Y-%m-%d %H:%M:%S')
-            self.times[i] = time
+            self.time[i] = time
             # Forward speed (kt)
             if i > 0:
-               p1 = (self.lats[i-1], self.lons[i-1])
-               p2 = (self.lats[i], self.lons[i])
+               p1 = (self.lat[i-1], self.lon[i-1])
+               p2 = (self.lat[i], self.lon[i])
                dx = 0.539957*earthdist(p1, p2) # nm
                # Seconds since last ob
-               dt = int((self.times[i] - self.times[i-1]).item().total_seconds())
+               dt = int((self.time[i] - self.time[i-1]).item().total_seconds())
                self.speed[i] = 3600*dx/dt if dt > 0 else np.nan # kt
             # Storm classification (see Ibtracs.possible_classifications)
-            self.classifications[i] = fields[7]
+            self.classification[i] = fields[7]
             # Max wind in kt
             wind = float(fields[10] or np.nan)
             self.wind[i] = wind if wind > 0 else np.nan
             # MSLP in hPa
             mslp = float(fields[11] or np.nan)
             self.mslp[i] = mslp if mslp > 0 else np.nan
+            # Distance to land (km)
+            self.dist2land[i] = float(fields[14] or np.nan)
             # Wind radii (nm) as determined by a USA agency, if available
             radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
             for j, attr in enumerate(radii_attrs):
@@ -137,7 +140,7 @@ class Storm:
         # almost always have missing or interpolated information
         self.remove_nonsynoptic_times()
         # Abort if there is no data at synoptic times
-        if len(self.times) == 0:
+        if len(self.time) == 0:
             return
 
         # Post-process longitudes to make sure plots work correctly.
@@ -146,25 +149,25 @@ class Storm:
         # The 2nd condition ensures we only catch the prime meridian
         # (storm crossing dateline will have max lon near 180, and it can't jump
         # 40 degrees between two track points to cross that line)
-        minlon, maxlon = min(self.lons), max(self.lons)
+        minlon, maxlon = min(self.lon), max(self.lon)
         if minlon*maxlon <= 0 and abs(maxlon) < 140:
-           self.lons = [lon+360 if lon >= 0 else lon for lon in self.lons]
+           self.lon = [lon+360 if lon >= 0 else lon for lon in self.lon]
         # Make sure lon is defined in [0,360] not [-180,180] to avoid problems across dateline
-        self.lons = [lon+360 if lon < 0 else lon for lon in self.lons]
+        self.lon = [lon+360 if lon < 0 else lon for lon in self.lon]
 
         # Define date/time of genesis as the first track point at which the
         # classification is not 'DS' (disturbance) or 'NR' (not rated)
-        for t, c in zip(self.times, self.classifications):
+        for t, c in zip(self.time, self.classification):
             if c not in ('DS','NR'):
                 self.genesis = t.item() # datetime object
                 break
         # Otherwise, use the first date available
         else:
-            self.genesis = self.times[0].item() # datetime object
+            self.genesis = self.time[0].item() # datetime object
 
         # Parse other time-independent attributes of the storm using the first track point.
         # This only works if non-synoptic track points have been removed first
-        t0str = self.times[0].item().strftime('%Y-%m-%d %H:%M:%S')
+        t0str = self.time[0].item().strftime('%Y-%m-%d %H:%M:%S')
         # Need to find first line that is a synoptic time
         for line in lines:
             fields = [field.strip() for field in line.split(',')]
@@ -175,7 +178,7 @@ class Storm:
         self.name = fields[5]
         # Take the 'basin' as the basin in which the TC formed. A storm may cross
         # basins during its lifetime. All occupied basins are collected in self.basins
-        i_genesis = np.where(self.times == self.genesis)[0][0]
+        i_genesis = np.where(self.time == self.genesis)[0][0]
         self.basin = self.basins[i_genesis]
         self.subbasin = self.subbasins[i_genesis]
 
@@ -208,24 +211,23 @@ class Storm:
         self.genesis = datetime.strptime(gstr, '%Y-%m-%d %H:%M:%S')
         # Array datatypes
         dtypes = {
-            'lats': float, 'lons': float, 'times': 'datetime64[m]', 'classifications': 'U2',
-            'wind': float, 'mslp': float, 'speed': float, 'basins': 'U2',
+            'lat': float, 'lon': float, 'time': 'datetime64[m]', 'classification': 'U2',
+            'wind': float, 'mslp': float, 'speed': float, 'dist2land': float, 'basins': 'U2',
             'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
             'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
             'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
             'R64_SW': float, 'R64_NW': float
         }
-        self.lats = np.array(data['lat'], dtype=dtypes['lats'])
-        self.lons = np.array(data['lon'], dtype=dtypes['lons'])
-        self.times = np.array([datetime.strptime(tstr, '%Y-%m-%d %H:%M:%S')
-                               for tstr in data['time']], dtype=dtypes['times'])
-        self.wind = np.array(data['wind'], dtype=dtypes['wind'])
-        self.mslp = np.array(data['mslp'], dtype=dtypes['mslp'])
-        self.classifications = np.array(data['classification'], dtype=dtypes['classifications'])
-        self.speed = np.array(data['speed'], dtype=dtypes['speed'])
+        # Attributes with special formatting or inconsistent names
+        self.time = np.array([datetime.strptime(tstr, '%Y-%m-%d %H:%M:%S')
+                              for tstr in data['time']], dtype=dtypes['time'])
         self.basins = np.array(data['basin'], dtype=dtypes['basins'])
         self.subbasins = np.array(data['subbasin'], dtype=dtypes['subbasins'])
         self.agencies = np.array(data['agency'], dtype=dtypes['agencies'])
+        # Other arrays with consistent names
+        attrs = ['lat', 'lon', 'mslp', 'classification', 'speed', 'dist2land']
+        for attr in attrs:
+            setattr(self, attr, np.array(data[attr], dtype=dtypes[attr]))
         # Wind radii
         radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
         for attr in radii_attrs:
@@ -236,8 +238,8 @@ class Storm:
         data = json.loads(data)
         # Array datatypes
         dtypes = {
-            'lats': float, 'lons': float, 'times': 'datetime64[m]', 'classifications': 'U2',
-            'wind': float, 'mslp': float, 'speed': float, 'basins': 'U2',
+            'lat': float, 'lon': float, 'time': 'datetime64[m]', 'classification': 'U2',
+            'wind': float, 'mslp': float, 'speed': float, 'dist2land': float, 'basins': 'U2',
             'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
             'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
             'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
@@ -271,12 +273,12 @@ class Storm:
         return json.dumps(self, default=encoder)
 
     def remove_nonsynoptic_times(self):
-        ntimes = len(self.times)
+        ntimes = len(self.time)
         # Keep 00Z, 06Z, 12Z, and 18Z only
-        idx_keep = [i for i, t in enumerate(self.times)
+        idx_keep = [i for i, t in enumerate(self.time)
                     if t.item().hour % 6 == 0 and t.item().minute == 0]
         for attr, values in self.__dict__.items():
-            # Assume arrays with same length as self.times are obs data
+            # Assume arrays with same length as self.time are obs data
             if type(values) is list and len(values) == ntimes:
                 setattr(self, attr, [v for i, v in enumerate(values) if i in idx_keep])
             elif type(values) is np.ndarray and values.size == ntimes:
@@ -295,10 +297,10 @@ class Storm:
             Dictionary like {'lat': 29, 'lon': 261, 'wind': 35, ...}
             mapping attributes to values at the requested time
         """
-        if t not in self.times:
+        if t not in self.time:
             raise ValueError(f'No data found at {t}')
         data = {}
-        i = np.where(self.times == t)[0][0]
+        i = np.where(self.time == t)[0][0]
         for attr, values in self.__dict__.items():
             if type(values) in (np.ndarray, list):
                 data[attr] = values[i]
@@ -322,7 +324,7 @@ class Storm:
         """
         v2 = []
         classification_blacklist = ('ET','DS') if subtropical else ('ET','DS','SS')
-        for t, v, c in zip(self.times, self.wind, self.classifications):
+        for t, v, c in zip(self.time, self.wind, self.classification):
             t = t.item() # Get datetime object
             conditions = [v >= 34, c not in classification_blacklist, t.hour % 6 == 0, t.minute == 0]
             if all(conditions):
@@ -347,18 +349,18 @@ class Storm:
         lat0, lat1, lon0, lon1 = coords
         # Interpolate positions to 1-hourly
         hourlypos = []
-        for i in range(1, len(self.times)):
+        for i in range(1, len(self.time)):
             # Start with the previous known position
-            hourlypos.append((self.lats[i-1], self.lons[i-1]))
+            hourlypos.append((self.lat[i-1], self.lon[i-1]))
             # Time difference in hours:
-            dt = int((self.times[i] - self.times[i-1]).item().total_seconds()/3600)
+            dt = int((self.time[i] - self.time[i-1]).item().total_seconds()/3600)
             # Position change
-            dlat = self.lats[i] - self.lats[i-1]
-            dlon = self.lons[i] - self.lons[i-1]
+            dlat = self.lat[i] - self.lat[i-1]
+            dlon = self.lon[i] - self.lon[i-1]
             # Interpolate for each hour up until the following known position.
             for h in range(1,dt):
-                ilat = self.lats[i-1] + h*(dlat/dt)
-                ilon = self.lons[i-1] + h*(dlon/dt)
+                ilat = self.lat[i-1] + h*(dlat/dt)
+                ilon = self.lon[i-1] + h*(dlon/dt)
                 hourlypos.append((ilat, ilon))
 
         # Determine if any hourly position was inside the bounding box

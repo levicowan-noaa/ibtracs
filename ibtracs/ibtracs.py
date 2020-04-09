@@ -2,7 +2,6 @@ __all__ = ['Ibtracs']
 
 from .storm import Storm
 import logging
-import numpy as np
 import os, sys
 import sqlite3
 
@@ -78,7 +77,7 @@ class Ibtracs:
         for tcID in TCs_by_ID:
             # Exclude "NOT_NAMED" since this leads to false duplicates
             TCs = [tc for tc in TCs_by_ID[tcID] if tc.name != 'NOT_NAMED']
-            TCs.sort(key=lambda tc: len(tc.times), reverse=True)
+            TCs.sort(key=lambda tc: len(tc.time), reverse=True)
             # Mark all but the TC with the longest record for removal
             duplicates_to_remove.extend(TCs[1:])
         # Remove duplicates
@@ -112,7 +111,7 @@ class Ibtracs:
                 else:
                     if stormlines:
                         tc = Storm(stormlines)
-                        if len(tc.times) > 0:
+                        if len(tc.time) > 0:
                             self.storms.append(tc)
                     stormlines = [line.strip()]
                     oldID = ID
@@ -121,7 +120,7 @@ class Ibtracs:
                 if line == '':
                     if stormlines:
                         tc = Storm(stormlines)
-                        if len(tc.times) > 0:
+                        if len(tc.time) > 0:
                             self.storms.append(tc)
                     break
                 linenum += 1
@@ -216,14 +215,14 @@ class Ibtracs:
                 lat FLOAT,        lon FLOAT,
                 time DATETIME,    wind INT,
                 mslp INT,         classification CHAR(2),
-                speed FLOAT,      genesis DATETIME,
-                agency VARCHAR,   R34_SE FLOAT,
-                R34_NE FLOAT,     R34_SW FLOAT,
-                R34_NW FLOAT,     R50_SE FLOAT,
-                R50_NE FLOAT,     R50_SW FLOAT,
-                R50_NW FLOAT,     R64_SE FLOAT,
-                R64_NE FLOAT,     R64_SW FLOAT,
-                R64_NW FLOAT
+                speed FLOAT,      dist2land INT,
+                genesis DATETIME, agency VARCHAR,
+                R34_SE FLOAT,     R34_NE FLOAT,
+                R34_SW FLOAT,     R34_NW FLOAT,
+                R50_SE FLOAT,     R50_NE FLOAT,
+                R50_SW FLOAT,     R50_NW FLOAT,
+                R64_SE FLOAT,     R64_NE FLOAT,
+                R64_SW FLOAT,     R64_NW FLOAT
         )""")
         self.db.commit()
 
@@ -232,12 +231,12 @@ class Ibtracs:
         radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
         for tc in self.storms:
             genesis = tc.genesis.strftime('%Y-%m-%d %H:%M:%S')
-            for i in range(len(tc.times)):
-                t = tc.times[i].item().strftime('%Y-%m-%d %H:%M:%S')
+            for i in range(len(tc.time)):
+                t = tc.time[i].item().strftime('%Y-%m-%d %H:%M:%S')
                 vals = (
                     tc.ID, tc.ATCF_ID, tc.name, tc.season, tc.basins[i], tc.subbasins[i],
-                    tc.lats[i], tc.lons[i], t, tc.wind[i], tc.mslp[i],
-                    tc.classifications[i], tc.speed[i], genesis, tc.agencies[i]
+                    tc.lat[i], tc.lon[i], t, tc.wind[i], tc.mslp[i],
+                    tc.classification[i], tc.speed[i], tc.dist2land[i], genesis, tc.agencies[i]
                 )
                 # Wind radii values
                 rvals = tuple(getattr(tc, attr)[i] for attr in radii_attrs)
