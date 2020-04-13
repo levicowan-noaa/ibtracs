@@ -217,6 +217,7 @@ class Ibtracs:
                 mslp INT,         classification CHAR(2),
                 speed FLOAT,      dist2land INT,
                 genesis DATETIME, agency VARCHAR,
+                rmw INT,
                 R34_SE FLOAT,     R34_NE FLOAT,
                 R34_SW FLOAT,     R34_NW FLOAT,
                 R50_SE FLOAT,     R50_NE FLOAT,
@@ -236,7 +237,7 @@ class Ibtracs:
                 vals = (
                     tc.ID, tc.ATCF_ID, tc.name, tc.season, tc.basins[i], tc.subbasins[i],
                     tc.lat[i], tc.lon[i], t, tc.wind[i], tc.mslp[i],
-                    tc.classification[i], tc.speed[i], tc.dist2land[i], genesis, tc.agencies[i]
+                    tc.classification[i], tc.speed[i], tc.dist2land[i], genesis, tc.agencies[i], tc.rmw[i]
                 )
                 # Wind radii values
                 rvals = tuple(getattr(tc, attr)[i] for attr in radii_attrs)

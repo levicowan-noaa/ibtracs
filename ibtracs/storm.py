@@ -35,6 +35,7 @@ class Storm:
         'season': {'units': None, 'description': ('For NHEM: year in which storm formed. '
                                                   'For SHEM: the latter year spanned by the '
                                                   'July-June season in which the storm formed.')},
+        'rmw': {'units': 'nm', 'description': 'radius of maximum wind (nm) (from USA-based agencies only, if available)'},
     }
     # Add wind radii descriptions in bulk
     radii_attrs = {f'R{v}_{q}': (v, q) for v in (34,50,64) for q in ('NE','SE','SW','NW')}
@@ -91,7 +92,7 @@ class Storm:
             'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
             'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
             'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
-            'R64_SW': float, 'R64_NW': float
+            'R64_SW': float, 'R64_NW': float, 'rmw': float,
         }
         # Initialize arrays
         for arrname, dtype in dtypes.items():
@@ -128,6 +129,8 @@ class Storm:
             self.mslp[i] = mslp if mslp > 0 else np.nan
             # Distance to land (km)
             self.dist2land[i] = float(fields[14] or np.nan)
+            # Radius of maximum wind (nm) as determined by a USA agency, if available
+            self.rmw[i] = float(fields[40] or np.nan)
             # Wind radii (nm) as determined by a USA agency, if available
             radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
             for j, attr in enumerate(radii_attrs):
@@ -216,7 +219,7 @@ class Storm:
             'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
             'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
             'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
-            'R64_SW': float, 'R64_NW': float
+            'R64_SW': float, 'R64_NW': float, 'rmw': float
         }
         # Attributes with special formatting or inconsistent names
         self.time = np.array([datetime.strptime(tstr, '%Y-%m-%d %H:%M:%S')
@@ -225,7 +228,7 @@ class Storm:
         self.subbasins = np.array(data['subbasin'], dtype=dtypes['subbasins'])
         self.agencies = np.array(data['agency'], dtype=dtypes['agencies'])
         # Other arrays with consistent names
-        attrs = ['lat', 'lon', 'mslp', 'classification', 'speed', 'dist2land']
+        attrs = ['lat', 'lon', 'mslp', 'classification', 'speed', 'dist2land', 'rmw']
         for attr in attrs:
             setattr(self, attr, np.array(data[attr], dtype=dtypes[attr]))
         # Wind radii
