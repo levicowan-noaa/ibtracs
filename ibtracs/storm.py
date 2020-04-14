@@ -228,9 +228,9 @@ class Storm:
         self.subbasins = np.array(data['subbasin'], dtype=dtypes['subbasins'])
         self.agencies = np.array(data['agency'], dtype=dtypes['agencies'])
         # Other arrays with consistent names
-        attrs = ['lat', 'lon', 'mslp', 'classification', 'speed', 'dist2land', 'rmw']
-        for attr in attrs:
-            setattr(self, attr, np.array(data[attr], dtype=dtypes[attr]))
+        for attr, dtype in dtypes.items():
+            if getattr(self, attr, None) is None:
+                setattr(self, attr, np.array(data[attr], dtype=dtype))
         # Wind radii
         radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
         for attr in radii_attrs:
