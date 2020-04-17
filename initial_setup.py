@@ -8,7 +8,8 @@ import os, sys
 # Ensure we import the *installed* ibtracs package, not file from local git repo
 thisdir = os.path.dirname(os.path.realpath(__file__))
 if thisdir in sys.path:
-    sys.path.remove(thisdir)
+    # Make sure to remove *all* occurrences of thisdir
+    sys.path = [p for p in sys.path if p != thisdir]
 from ibtracs import Ibtracs
 from urllib.request import urlopen
 
