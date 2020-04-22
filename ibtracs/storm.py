@@ -123,6 +123,9 @@ class Storm:
             self.classification[i] = fields[7]
             # Max wind in kt
             wind = float(fields[10] or np.nan)
+            # For HURDAT basins, use USA agency wind if WMO wind unavailable
+            if np.isnan(wind) or wind == 0:
+                wind = float(fields[23] or np.nan)
             self.wind[i] = wind if wind > 0 else np.nan
             # MSLP in hPa
             mslp = float(fields[11] or np.nan)
