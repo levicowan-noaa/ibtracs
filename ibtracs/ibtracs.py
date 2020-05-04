@@ -247,15 +247,29 @@ class Ibtracs:
         c.executemany(f'INSERT INTO {self.tablename} VALUES ({",".join("?"*len(rows[0]))})', rows)
         self.db.commit()
 
-
-    def get_storm(self, name, season, basin):
+    def get_storm_from_name(self, name, season, basin):
         """
-        Fetch a TC from the SQL database and construct a Storm object.
-        This can only be used to get storms with a defined name
+        Fetch a TC from the SQL database based on its name, season, and basin
+        and construct a Storm object. Note that this cannot work for storms
+        with name="NOT_NAMED".
         """
         rows = list(self.db.execute(f'SELECT * FROM {self.tablename} WHERE name = "{name.upper()}" AND season = {season} AND basin = "{basin}" ORDER BY time'))
         if not rows:
             raise ValueError(f'Storm not found in database: name={name}, season={season}, basin={basin}')
+        colnames = [info[1] for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')]
+        values = list(zip(*rows))
+        data = {colname: values for colname, values in zip(colnames, values)}
+        return Storm(data, datatype='db')
+
+    def get_storm_from_atcfid(self, ATCF_ID):
+        """
+        Fetch a TC from the SQL database based on its ATCF ID and construct
+        a Storm object. Note that some TCs may not have an ATCF ID in the
+        database.
+        """
+        rows = list(self.db.execute(f'SELECT * FROM {self.tablename} WHERE ATCF_ID = "{ATCF_ID}" ORDER BY time'))
+        if not rows:
+            raise ValueError(f'ATCF ID not found in database: {ATCF_ID}')
         colnames = [info[1] for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')]
         values = list(zip(*rows))
         data = {colname: values for colname, values in zip(colnames, values)}

@@ -26,7 +26,11 @@ I = Ibtracs()
 
 ### Load a single TC from the SQL database into a Storm object
 ```
-tc = I.get_storm(name='katrina', season=2005, basin='NA')
+tc = I.get_storm_from_name(name='katrina', season=2005, basin='NA')
+```
+OR
+```
+tc = I.get_storm_from_atcfid('AL122005')
 ```
 
 ### View some data from the TC:
