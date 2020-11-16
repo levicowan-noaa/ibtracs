@@ -1,7 +1,6 @@
 __all__ = ['Ibtracs']
 
 from ibtracs.storm import Storm
-from ibtracs.utils import download_data
 import logging
 import os, sys
 import sqlite3
