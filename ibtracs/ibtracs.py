@@ -63,7 +63,7 @@ class Ibtracs:
         if not os.path.exists(self.db_filename):
             download_now = input('IBTrACS database has not been downloaded. Download now? [yes/no]')
             if download_now.lower() in ('yes', 'y'):
-                download_data()
+                self.download_data()
                 # Create database
                 self.load_all_storms(source='csv')
                 self.save_to_db()
