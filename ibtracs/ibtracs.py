@@ -61,9 +61,10 @@ class Ibtracs:
         if not os.path.exists(self.datadir):
             os.makedirs(self.datadir, 0o755)
         self.db_filename = os.path.join(self.datadir, 'storms.db')
+        database_exists = os.path.exists(self.db_filename)
         self.db = sqlite3.connect(self.db_filename)
         self.tablename = 'storms' # SQL table name
-        if not os.path.exists(self.db_filename):
+        if not database_exists:
             download_now = input('IBTrACS database has not been downloaded. Download now? [yes/no]')
             if download_now.lower() in ('yes', 'y'):
                 self.download_data()
