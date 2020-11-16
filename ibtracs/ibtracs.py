@@ -56,10 +56,13 @@ class Ibtracs:
 
     def __init__(self):
         self.logfile = logfile
+        self.storms = [] # To hold ibtracs.storm.Storm objects
         self.datadir = os.path.join(workdir, 'data')
         if not os.path.exists(self.datadir):
             os.makedirs(self.datadir, 0o755)
         self.db_filename = os.path.join(self.datadir, 'storms.db')
+        self.db = sqlite3.connect(self.db_filename)
+        self.tablename = 'storms' # SQL table name
         if not os.path.exists(self.db_filename):
             download_now = input('IBTrACS database has not been downloaded. Download now? [yes/no]')
             if download_now.lower() in ('yes', 'y'):
@@ -69,9 +72,6 @@ class Ibtracs:
                 self.save_to_db()
             else:
                 sys.exit()
-        self.db = sqlite3.connect(self.db_filename)
-        self.tablename = 'storms' # SQL table name
-        self.storms = [] # To hold ibtracs.storm.Storm objects
 
     def resolve_duplicates(self):
         """
