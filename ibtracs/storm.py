@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 import logging
 import numpy as np
-from .utils import earthdist
+from ibtracs.utils import earthdist
 
 logger = logging.getLogger(__name__)
 
