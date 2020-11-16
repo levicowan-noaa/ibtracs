@@ -61,8 +61,8 @@ class Ibtracs:
             os.makedirs(self.datadir, 0o755)
         self.db_filename = os.path.join(self.datadir, 'storms.db')
         if not os.path.exists(self.db_filename):
-            download_now = input('IBTrACS database has not been downloaded. Download now?')
-            if download_now:
+            download_now = input('IBTrACS database has not been downloaded. Download now? [yes/no]')
+            if download_now.lower() in ('yes', 'y'):
                 download_data()
             else:
                 sys.exit()
