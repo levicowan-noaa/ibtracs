@@ -1,6 +1,7 @@
 __all__ = ['Ibtracs']
 
-from .storm import Storm
+from ibtracs.storm import Storm
+from ibtracs.utils import download_data
 import logging
 import os, sys
 import sqlite3
@@ -59,6 +60,12 @@ class Ibtracs:
         if not os.path.exists(self.datadir):
             os.makedirs(self.datadir, 0o755)
         self.db_filename = os.path.join(self.datadir, 'storms.db')
+        if not os.path.exists(self.db_filename):
+            download_now = input('IBTrACS database has not been downloaded. Download now?')
+            if download_now:
+                download_data()
+            else:
+                sys.exit()
         self.db = sqlite3.connect(self.db_filename)
         self.tablename = 'storms' # SQL table name
         self.storms = [] # To hold ibtracs.storm.Storm objects
