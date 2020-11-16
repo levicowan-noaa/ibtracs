@@ -10,9 +10,7 @@ A Python interface to the IBTrACS tropical cyclone best track dataset. Only 6-ho
 
 Ensure your desired Python environment is activated, then:
 ```
-git clone https://www.github.com/levicowan/ibtracs /tmp/ibtracs
-cd /tmp/ibtracs
-python setup.py install
+pip install git+https://github.com/levicowan/ibtracs
 ```
 
 This will download the IBTrACS v4r00 CSV file from NCEI (URL will need updating when new dataset versions get released). The file will then get parsed, and an SQLite database will be created. This database is ~44MB in size, compared to the ~297MB CSV file, and much faster to read/parse.
