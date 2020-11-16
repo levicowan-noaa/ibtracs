@@ -9,7 +9,7 @@ import os, sys
 class Install(install):
     def run(self):
         install.run(self)
-        self.post_install()
+        #  self.post_install()
 
     def post_install(self):
         # Run script from directory where setup.py was called (the git repo).
@@ -35,6 +35,6 @@ setup(
     author='Levi Cowan',
     license='MIT',
     packages=['ibtracs'],
-    scripts=['initial_setup.py'],
+    #  scripts=['initial_setup.py'],
     cmdclass={'install': Install}
 )
