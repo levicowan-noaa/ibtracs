@@ -17,6 +17,8 @@ logger.addHandler(handler)
 # Create custom hook for uncaught exceptions
 def exc_hook(Type, value, tb):
     logger.exception(msg='', exc_info=(Type, value, tb))
+
+
 sys.excepthook = exc_hook
 
 
@@ -25,8 +27,12 @@ class Ibtracs:
     #                     Useful metadata                      #
     ############################################################
     possible_classifications = {
-        'TS': 'Tropical', 'SS': 'Subtropical', 'ET': 'Extratropical',
-        'DS': 'Distrubance', 'NR': 'Not Reported', 'MX': 'Mixture (Agencies Contradict)'
+        'TS': 'Tropical',
+        'SS': 'Subtropical',
+        'ET': 'Extratropical',
+        'DS': 'Distrubance',
+        'NR': 'Not Reported',
+        'MX': 'Mixture (Agencies Contradict)',
     }
 
     possible_basins = {
@@ -36,7 +42,7 @@ class Ibtracs:
         'NI': 'North Indian',
         'SI': 'South Indian',
         'SP': 'South Pacific',
-        'SA': 'South Atlantic'
+        'SA': 'South Atlantic',
     }
 
     possible_subbasins = {
@@ -48,24 +54,36 @@ class Ibtracs:
         'WA': 'Western Australia',
         'EA': 'Eastern Australia',
         'NA': 'North Atlantic',
-        'MM': 'Missing'
+        'MM': 'Missing',
     }
 
-    possible_agencies = ['atcf', 'bom', 'cphc', 'hurdat_atl', 'hurdat_epa', 'nadi',
-                        'newdelhi', 'reunion', 'tokyo', 'wellington']
+    possible_agencies = [
+        'atcf',
+        'bom',
+        'cphc',
+        'hurdat_atl',
+        'hurdat_epa',
+        'nadi',
+        'newdelhi',
+        'reunion',
+        'tokyo',
+        'wellington',
+    ]
 
     def __init__(self):
         self.logfile = logfile
-        self.storms = [] # To hold ibtracs.storm.Storm objects
+        self.storms = []  # To hold ibtracs.storm.Storm objects
         self.datadir = os.path.join(workdir, 'data')
         if not os.path.exists(self.datadir):
             os.makedirs(self.datadir, 0o755)
         self.db_filename = os.path.join(self.datadir, 'storms.db')
         database_exists = os.path.exists(self.db_filename)
         self.db = sqlite3.connect(self.db_filename)
-        self.tablename = 'storms' # SQL table name
+        self.tablename = 'storms'  # SQL table name
         if not database_exists:
-            download_now = input('IBTrACS database has not been downloaded. Download now? [yes/no]')
+            download_now = input(
+                'IBTrACS database has not been downloaded. Download now? [yes/no]'
+            )
             if download_now.lower() in ('yes', 'y'):
                 self.download_data()
                 # Create database
@@ -148,7 +166,10 @@ class Ibtracs:
         for row in rows:
             rows_by_TC.setdefault(row[0], []).append(row)
         # Format into mapping of column names to column data
-        colnames = [info[1] for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')]
+        colnames = [
+            info[1]
+            for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')
+        ]
         for storm_rows in rows_by_TC.values():
             values = list(zip(*storm_rows))
             data = {colname: values for colname, values in zip(colnames, values)}
@@ -161,7 +182,7 @@ class Ibtracs:
         self.storms.clear()
         for dirname, subdirs, filenames in os.walk(os.path.join(self.datadir, 'json')):
             for fname in filenames:
-                print(f'Loading {fname}'+' '*20, end='\r')
+                print(f'Loading {fname}' + ' ' * 20, end='\r')
                 with open(os.path.join(dirname, fname)) as f:
                     data = f.read()
                 self.storms.append(Storm(data, datatype='json'))
@@ -181,7 +202,9 @@ class Ibtracs:
             assert os.path.exists(self.db_filename), 'database file does not exist'
             self.load_from_db()
         elif source == 'json':
-            assert os.path.exists(os.path.join(workdir, 'data/json')), 'JSON files do not exist'
+            assert os.path.exists(
+                os.path.join(workdir, 'data/json')
+            ), 'JSON files do not exist'
             self.load_from_json()
         elif source == 'csv':
             assert os.path.exists(os.path.join(self.datadir, 'ibtracs.csv'))
@@ -204,7 +227,9 @@ class Ibtracs:
             savedir = os.path.join(self.datadir, f'json/{tc.basin}/{tc.season}')
             if not os.path.exists(savedir):
                 os.makedirs(savedir, 0o755)
-            with open(os.path.join(savedir, f'{tc.name.lower()}_{tc.ID}.json'), 'w') as f:
+            with open(
+                os.path.join(savedir, f'{tc.name.lower()}_{tc.ID}.json'), 'w'
+            ) as f:
                 f.write(data)
         print()
 
@@ -218,7 +243,8 @@ class Ibtracs:
         c = self.db.cursor()
         # Create storm table. If it already exists, replace it.
         c.execute(f'DROP TABLE IF EXISTS {self.tablename}')
-        c.execute(f"""
+        c.execute(
+            f"""
             CREATE TABLE {self.tablename}(
                 ID CHAR(13),      ATCF_ID CHAR(8),
                 name VARCHAR,     season INT,
@@ -235,27 +261,46 @@ class Ibtracs:
                 R50_SW FLOAT,     R50_NW FLOAT,
                 R64_SE FLOAT,     R64_NE FLOAT,
                 R64_SW FLOAT,     R64_NW FLOAT
-        )""")
+        )"""
+        )
         self.db.commit()
 
         # Insert each track point as a row
         rows = []
-        radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
+        radii_attrs = [
+            f'R{v}_{q}' for v in (34, 50, 64) for q in ('NE', 'SE', 'SW', 'NW')
+        ]
         for tc in self.storms:
             genesis = tc.genesis.strftime('%Y-%m-%d %H:%M:%S')
             for i in range(len(tc.time)):
                 t = tc.time[i].item().strftime('%Y-%m-%d %H:%M:%S')
                 vals = (
-                    tc.ID, tc.ATCF_ID, tc.name, tc.season, tc.basins[i], tc.subbasins[i],
-                    tc.lat[i], tc.lon[i], t, tc.wind[i], tc.mslp[i],
-                    tc.classification[i], tc.speed[i], tc.dist2land[i], genesis, tc.agencies[i], tc.rmw[i]
+                    tc.ID,
+                    tc.ATCF_ID,
+                    tc.name,
+                    tc.season,
+                    tc.basins[i],
+                    tc.subbasins[i],
+                    tc.lat[i],
+                    tc.lon[i],
+                    t,
+                    tc.wind[i],
+                    tc.mslp[i],
+                    tc.classification[i],
+                    tc.speed[i],
+                    tc.dist2land[i],
+                    genesis,
+                    tc.agencies[i],
+                    tc.rmw[i],
                 )
                 # Wind radii values
                 rvals = tuple(getattr(tc, attr)[i] for attr in radii_attrs)
                 row = vals + rvals
                 rows.append(row)
         logger.info(f'Inserting {len(rows)} rows into database...')
-        c.executemany(f'INSERT INTO {self.tablename} VALUES ({",".join("?"*len(rows[0]))})', rows)
+        c.executemany(
+            f'INSERT INTO {self.tablename} VALUES ({",".join("?"*len(rows[0]))})', rows
+        )
         self.db.commit()
 
     def get_storm_from_name(self, name, season, basin):
@@ -264,10 +309,19 @@ class Ibtracs:
         and construct a Storm object. Note that this cannot work for storms
         with name="NOT_NAMED".
         """
-        rows = list(self.db.execute(f'SELECT * FROM {self.tablename} WHERE name = "{name.upper()}" AND season = {season} AND basin = "{basin}" ORDER BY time'))
+        rows = list(
+            self.db.execute(
+                f'SELECT * FROM {self.tablename} WHERE name = "{name.upper()}" AND season = {season} AND basin = "{basin}" ORDER BY time'
+            )
+        )
         if not rows:
-            raise ValueError(f'Storm not found in database: name={name}, season={season}, basin={basin}')
-        colnames = [info[1] for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')]
+            raise ValueError(
+                f'Storm not found in database: name={name}, season={season}, basin={basin}'
+            )
+        colnames = [
+            info[1]
+            for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')
+        ]
         values = list(zip(*rows))
         data = {colname: values for colname, values in zip(colnames, values)}
         return Storm(data, datatype='db')
@@ -278,36 +332,53 @@ class Ibtracs:
         a Storm object. Note that some TCs may not have an ATCF ID in the
         database.
         """
-        rows = list(self.db.execute(f'SELECT * FROM {self.tablename} WHERE ATCF_ID = "{ATCF_ID}" ORDER BY time'))
+        rows = list(
+            self.db.execute(
+                f'SELECT * FROM {self.tablename} WHERE ATCF_ID = "{ATCF_ID}" ORDER BY time'
+            )
+        )
         if not rows:
             raise ValueError(f'ATCF ID not found in database: {ATCF_ID}')
-        colnames = [info[1] for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')]
+        colnames = [
+            info[1]
+            for info in self.db.execute(f'PRAGMA table_info("{self.tablename}")')
+        ]
         values = list(zip(*rows))
         data = {colname: values for colname, values in zip(colnames, values)}
         return Storm(data, datatype='db')
 
-
     def download_data(self):
         """Setup data directory, download raw IBTrACS CSV file, and generate database"""
         # Download raw CSV file from NCEI if it doesn't exist
-        url = ('https://www.ncei.noaa.gov/data/'
+        url = (
+            'https://www.ncei.noaa.gov/data/'
             'international-best-track-archive-for-climate-stewardship-ibtracs/'
-            'v04r00/access/csv/ibtracs.ALL.list.v04r00.csv')
+            'v04r00/access/csv/ibtracs.ALL.list.v04r00.csv'
+        )
         filename = os.path.join(self.datadir, 'ibtracs.csv')
+
         def progressbar(progress):
-            print("\tProgress: [{0:50s}] {1:.1f}% ".format('#'*int(progress*50), progress*100), end='\r')
+            print(
+                "\tProgress: [{0:50s}] {1:.1f}% ".format(
+                    '#' * int(progress * 50), progress * 100
+                ),
+                end='\r',
+            )
+
         if not os.path.exists(filename):
             with urlopen(url) as rf:
                 with open(filename, 'w') as lf:
                     size = int(rf.getheader('Content-length'))
                     retrieved = 0
                     chunksize = 1024
-                    print(f'Downloading raw IBTrACS CSV file from NCEI ({size/(1024*1024):.1f} MB)...')
+                    print(
+                        f'Downloading raw IBTrACS CSV file from NCEI ({size/(1024*1024):.1f} MB)...'
+                    )
                     while True:
                         chunk = rf.read(chunksize)
                         if not chunk:
                             break
                         retrieved += len(chunk)
                         lf.write(chunk.decode('utf-8'))
-                        progressbar(retrieved/size)
+                        progressbar(retrieved / size)
                     print()

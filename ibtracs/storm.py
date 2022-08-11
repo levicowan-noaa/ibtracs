@@ -18,31 +18,68 @@ class Storm:
         'lat': {'units': 'degrees', 'description': 'storm latitude'},
         'lon': {'units': 'degrees', 'description': 'storm longitude'},
         'time': {'units': 'numpy.datetime64[m]', 'description': 'observation time'},
-        'classification': {'units': None, 'description': ('storm classification (see '
-                                                           'Ibtracs.possible_classifications)')},
-        'wind': {'units': 'kt', 'description': ('maximum sustained wind '
-                                                '(averaging interval varies by agency)')},
+        'classification': {
+            'units': None,
+            'description': (
+                'storm classification (see ' 'Ibtracs.possible_classifications)'
+            ),
+        },
+        'wind': {
+            'units': 'kt',
+            'description': (
+                'maximum sustained wind ' '(averaging interval varies by agency)'
+            ),
+        },
         'mslp': {'units': 'hPa', 'description': 'central pressure'},
         'speed': {'units': 'kt', 'description': 'storm forward speed'},
         'dist2land': {'units': 'km', 'description': 'distance to land'},
         'genesis': {'units': 'datetime.datetime', 'description': 'time of genesis'},
         'basin': {'units': None, 'description': 'basin in which the storm formed'},
-        'subbasin': {'units': None, 'description': 'subbasin in which the storm formed'},
-        'basins': {'units': None, 'description': 'basin identifier (see Ibtracs.possible_basins)'},
-        'subbasins': {'units': None, 'description': 'subbasin identifier (see Ibtracs.possible_subbasins)'},
-        'agencies': {'units': None, 'description': ('agency from which storm data is provided '
-                                                    '(see Ibtracs.possible_agencies)')},
-        'season': {'units': None, 'description': ('For NHEM: year in which storm formed. '
-                                                  'For SHEM: the latter year spanned by the '
-                                                  'July-June season in which the storm formed.')},
-        'rmw': {'units': 'nm', 'description': 'radius of maximum wind (nm) (from USA-based agencies only, if available)'},
+        'subbasin': {
+            'units': None,
+            'description': 'subbasin in which the storm formed',
+        },
+        'basins': {
+            'units': None,
+            'description': 'basin identifier (see Ibtracs.possible_basins)',
+        },
+        'subbasins': {
+            'units': None,
+            'description': 'subbasin identifier (see Ibtracs.possible_subbasins)',
+        },
+        'agencies': {
+            'units': None,
+            'description': (
+                'agency from which storm data is provided '
+                '(see Ibtracs.possible_agencies)'
+            ),
+        },
+        'season': {
+            'units': None,
+            'description': (
+                'For NHEM: year in which storm formed. '
+                'For SHEM: the latter year spanned by the '
+                'July-June season in which the storm formed.'
+            ),
+        },
+        'rmw': {
+            'units': 'nm',
+            'description': 'radius of maximum wind (nm) (from USA-based agencies only, if available)',
+        },
     }
     # Add wind radii descriptions in bulk
-    radii_attrs = {f'R{v}_{q}': (v, q) for v in (34,50,64) for q in ('NE','SE','SW','NW')}
+    radii_attrs = {
+        f'R{v}_{q}': (v, q) for v in (34, 50, 64) for q in ('NE', 'SE', 'SW', 'NW')
+    }
     for attr, (v, q) in radii_attrs.items():
-        metadata[attr] = {'units': 'nm', 'description': (f'{v} kt wind radii in the {q} quadrant '
-                                                         '(from USA-based agencies only, if '
-                                                         'available)')}
+        metadata[attr] = {
+            'units': 'nm',
+            'description': (
+                f'{v} kt wind radii in the {q} quadrant '
+                '(from USA-based agencies only, if '
+                'available)'
+            ),
+        }
 
     def __init__(self, data, datatype='csv'):
         """
@@ -69,9 +106,13 @@ class Storm:
     def __eq__(self, other):
         # Have to compare starting TC location too since two TCs named "NOT_NAMED"
         # could form at the same time in the same basin
-        comparisons = [self.name == other.name, self.basin == other.basin,
-                       self.season == other.season, np.isclose(self.lon[0], other.lon[0]),
-                       np.isclose(self.lat[0], other.lat[0])]
+        comparisons = [
+            self.name == other.name,
+            self.basin == other.basin,
+            self.season == other.season,
+            np.isclose(self.lon[0], other.lon[0]),
+            np.isclose(self.lat[0], other.lat[0]),
+        ]
         return all(comparisons)
 
     def __hash__(self):
@@ -87,17 +128,37 @@ class Storm:
         """Parse a list of lines from the IBTrACS CSV file associated with a single storm"""
         # Parse time-dependent attributes
         dtypes = {
-            'lat': float, 'lon': float, 'time': 'datetime64[m]', 'classification': 'U2',
-            'wind': float, 'mslp': float, 'speed': float, 'dist2land': float, 'basins': 'U2',
-            'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
-            'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
-            'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
-            'R64_SW': float, 'R64_NW': float, 'rmw': float,
+            'lat': float,
+            'lon': float,
+            'time': 'datetime64[m]',
+            'classification': 'U2',
+            'wind': float,
+            'mslp': float,
+            'speed': float,
+            'dist2land': float,
+            'basins': 'U2',
+            'subbasins': 'U2',
+            'agencies': 'U10',
+            'R34_NE': float,
+            'R34_SE': float,
+            'R34_SW': float,
+            'R34_NW': float,
+            'R50_NE': float,
+            'R50_SE': float,
+            'R50_SW': float,
+            'R50_NW': float,
+            'R64_NE': float,
+            'R64_SE': float,
+            'R64_SW': float,
+            'R64_NW': float,
+            'rmw': float,
         }
         # Initialize arrays
         for arrname, dtype in dtypes.items():
             if dtype is float:
-                setattr(self, arrname, np.full(len(lines), fill_value=np.nan, dtype=dtype))
+                setattr(
+                    self, arrname, np.full(len(lines), fill_value=np.nan, dtype=dtype)
+                )
             else:
                 setattr(self, arrname, np.empty(len(lines), dtype=dtype))
         # Populate arrays
@@ -113,12 +174,12 @@ class Storm:
             self.time[i] = time
             # Forward speed (kt)
             if i > 0:
-               p1 = (self.lat[i-1], self.lon[i-1])
-               p2 = (self.lat[i], self.lon[i])
-               dx = 0.539957*earthdist(p1, p2) # nm
-               # Seconds since last ob
-               dt = int((self.time[i] - self.time[i-1]).item().total_seconds())
-               self.speed[i] = 3600*dx/dt if dt > 0 else np.nan # kt
+                p1 = (self.lat[i - 1], self.lon[i - 1])
+                p2 = (self.lat[i], self.lon[i])
+                dx = 0.539957 * earthdist(p1, p2)  # nm
+                # Seconds since last ob
+                dt = int((self.time[i] - self.time[i - 1]).item().total_seconds())
+                self.speed[i] = 3600 * dx / dt if dt > 0 else np.nan  # kt
             # Storm classification (see Ibtracs.possible_classifications)
             self.classification[i] = fields[7]
             # Max wind in kt
@@ -135,10 +196,12 @@ class Storm:
             # Radius of maximum wind (nm) as determined by a USA agency, if available
             self.rmw[i] = float(fields[40] or np.nan)
             # Wind radii (nm) as determined by a USA agency, if available
-            radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
+            radii_attrs = [
+                f'R{v}_{q}' for v in (34, 50, 64) for q in ('NE', 'SE', 'SW', 'NW')
+            ]
             for j, attr in enumerate(radii_attrs):
                 # First column of radii information (R34_SE) is 26
-                r = float(fields[26+j] or np.nan) # nm
+                r = float(fields[26 + j] or np.nan)  # nm
                 # Assign to array
                 getattr(self, attr)[i] = r
 
@@ -156,20 +219,20 @@ class Storm:
         # (storm crossing dateline will have max lon near 180, and it can't jump
         # 40 degrees between two track points to cross that line)
         minlon, maxlon = min(self.lon), max(self.lon)
-        if minlon*maxlon <= 0 and abs(maxlon) < 140:
-           self.lon = [lon+360 if lon >= 0 else lon for lon in self.lon]
+        if minlon * maxlon <= 0 and abs(maxlon) < 140:
+            self.lon = [lon + 360 if lon >= 0 else lon for lon in self.lon]
         # Make sure lon is defined in [0,360] not [-180,180] to avoid problems across dateline
-        self.lon = [lon+360 if lon < 0 else lon for lon in self.lon]
+        self.lon = [lon + 360 if lon < 0 else lon for lon in self.lon]
 
         # Define date/time of genesis as the first track point at which the
         # classification is not 'DS' (disturbance) or 'NR' (not rated)
         for t, c in zip(self.time, self.classification):
-            if c not in ('DS','NR'):
-                self.genesis = t.item() # datetime object
+            if c not in ('DS', 'NR'):
+                self.genesis = t.item()  # datetime object
                 break
         # Otherwise, use the first date available
         else:
-            self.genesis = self.time[0].item() # datetime object
+            self.genesis = self.time[0].item()  # datetime object
 
         # Parse other time-independent attributes of the storm using the first track point.
         # This only works if non-synoptic track points have been removed first
@@ -193,10 +256,10 @@ class Storm:
         # define the tropical season as July-June, with the season being
         # the latter of the two calendar years spanned by that period.
         year, month = self.genesis.year, self.genesis.month
-        if self.basin in ('SP','SI','SA'):
-            self.season = year+1 if month >= 7 else year
+        if self.basin in ('SP', 'SI', 'SA'):
+            self.season = year + 1 if month >= 7 else year
         else:
-           self.season = year
+            self.season = year
 
     def _parse_db(self, data):
         """
@@ -217,16 +280,36 @@ class Storm:
         self.genesis = datetime.strptime(gstr, '%Y-%m-%d %H:%M:%S')
         # Array datatypes
         dtypes = {
-            'lat': float, 'lon': float, 'time': 'datetime64[m]', 'classification': 'U2',
-            'wind': float, 'mslp': float, 'speed': float, 'dist2land': float, 'basins': 'U2',
-            'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
-            'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
-            'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
-            'R64_SW': float, 'R64_NW': float, 'rmw': float
+            'lat': float,
+            'lon': float,
+            'time': 'datetime64[m]',
+            'classification': 'U2',
+            'wind': float,
+            'mslp': float,
+            'speed': float,
+            'dist2land': float,
+            'basins': 'U2',
+            'subbasins': 'U2',
+            'agencies': 'U10',
+            'R34_NE': float,
+            'R34_SE': float,
+            'R34_SW': float,
+            'R34_NW': float,
+            'R50_NE': float,
+            'R50_SE': float,
+            'R50_SW': float,
+            'R50_NW': float,
+            'R64_NE': float,
+            'R64_SE': float,
+            'R64_SW': float,
+            'R64_NW': float,
+            'rmw': float,
         }
         # Attributes with special formatting or inconsistent names
-        self.time = np.array([datetime.strptime(tstr, '%Y-%m-%d %H:%M:%S')
-                              for tstr in data['time']], dtype=dtypes['time'])
+        self.time = np.array(
+            [datetime.strptime(tstr, '%Y-%m-%d %H:%M:%S') for tstr in data['time']],
+            dtype=dtypes['time'],
+        )
         self.basins = np.array(data['basin'], dtype=dtypes['basins'])
         self.subbasins = np.array(data['subbasin'], dtype=dtypes['subbasins'])
         self.agencies = np.array(data['agency'], dtype=dtypes['agencies'])
@@ -235,7 +318,9 @@ class Storm:
             if getattr(self, attr, None) is None:
                 setattr(self, attr, np.array(data[attr], dtype=dtype))
         # Wind radii
-        radii_attrs = [f'R{v}_{q}' for v in (34,50,64) for q in ('NE','SE','SW','NW')]
+        radii_attrs = [
+            f'R{v}_{q}' for v in (34, 50, 64) for q in ('NE', 'SE', 'SW', 'NW')
+        ]
         for attr in radii_attrs:
             setattr(self, attr, np.array(data[attr], dtype=dtypes[attr]))
 
@@ -244,17 +329,34 @@ class Storm:
         data = json.loads(data)
         # Array datatypes
         dtypes = {
-            'lat': float, 'lon': float, 'time': 'datetime64[m]', 'classification': 'U2',
-            'wind': float, 'mslp': float, 'speed': float, 'dist2land': float, 'basins': 'U2',
-            'subbasins': 'U2', 'agencies': 'U10', 'R34_NE': float,'R34_SE': float,
-            'R34_SW': float, 'R34_NW': float, 'R50_NE': float,'R50_SE': float,
-            'R50_SW': float, 'R50_NW': float, 'R64_NE': float, 'R64_SE': float,
-            'R64_SW': float, 'R64_NW': float
+            'lat': float,
+            'lon': float,
+            'time': 'datetime64[m]',
+            'classification': 'U2',
+            'wind': float,
+            'mslp': float,
+            'speed': float,
+            'dist2land': float,
+            'basins': 'U2',
+            'subbasins': 'U2',
+            'agencies': 'U10',
+            'R34_NE': float,
+            'R34_SE': float,
+            'R34_SW': float,
+            'R34_NW': float,
+            'R50_NE': float,
+            'R50_SE': float,
+            'R50_SW': float,
+            'R50_NW': float,
+            'R64_NE': float,
+            'R64_SE': float,
+            'R64_SW': float,
+            'R64_NW': float,
         }
         # Assign attributes
         for key, values in data.items():
             # Non-array attributes
-            if key in ('ID','ATCF_ID','name','basin','subbasin','season'):
+            if key in ('ID', 'ATCF_ID', 'name', 'basin', 'subbasin', 'season'):
                 setattr(self, key, values)
             elif key == 'genesis':
                 setattr(self, 'genesis', datetime.fromisoformat(values))
@@ -276,13 +378,17 @@ class Storm:
                 return obj.isoformat(timespec='minutes')
             else:
                 return obj.__dict__
+
         return json.dumps(self, default=encoder)
 
     def remove_nonsynoptic_times(self):
         ntimes = len(self.time)
         # Keep 00Z, 06Z, 12Z, and 18Z only
-        idx_keep = [i for i, t in enumerate(self.time)
-                    if t.item().hour % 6 == 0 and t.item().minute == 0]
+        idx_keep = [
+            i
+            for i, t in enumerate(self.time)
+            if t.item().hour % 6 == 0 and t.item().minute == 0
+        ]
         for attr, values in self.__dict__.items():
             # Assume arrays with same length as self.time are obs data
             if type(values) is list and len(values) == ntimes:
@@ -329,10 +435,15 @@ class Storm:
                          the ACE calculation.
         """
         v2 = []
-        classification_blacklist = ('ET','DS') if subtropical else ('ET','DS','SS')
+        classification_blacklist = ('ET', 'DS') if subtropical else ('ET', 'DS', 'SS')
         for t, v, c in zip(self.time, self.wind, self.classification):
-            t = t.item() # Get datetime object
-            conditions = [v >= 34, c not in classification_blacklist, t.hour % 6 == 0, t.minute == 0]
+            t = t.item()  # Get datetime object
+            conditions = [
+                v >= 34,
+                c not in classification_blacklist,
+                t.hour % 6 == 0,
+                t.minute == 0,
+            ]
             if all(conditions):
                 v2.append(v**2)
         ace = 1e-4 * sum(v2)
@@ -357,16 +468,16 @@ class Storm:
         hourlypos = []
         for i in range(1, len(self.time)):
             # Start with the previous known position
-            hourlypos.append((self.lat[i-1], self.lon[i-1]))
+            hourlypos.append((self.lat[i - 1], self.lon[i - 1]))
             # Time difference in hours:
-            dt = int((self.time[i] - self.time[i-1]).item().total_seconds()/3600)
+            dt = int((self.time[i] - self.time[i - 1]).item().total_seconds() / 3600)
             # Position change
-            dlat = self.lat[i] - self.lat[i-1]
-            dlon = self.lon[i] - self.lon[i-1]
+            dlat = self.lat[i] - self.lat[i - 1]
+            dlon = self.lon[i] - self.lon[i - 1]
             # Interpolate for each hour up until the following known position.
-            for h in range(1,dt):
-                ilat = self.lat[i-1] + h*(dlat/dt)
-                ilon = self.lon[i-1] + h*(dlon/dt)
+            for h in range(1, dt):
+                ilat = self.lat[i - 1] + h * (dlat / dt)
+                ilon = self.lon[i - 1] + h * (dlon / dt)
                 hourlypos.append((ilat, ilon))
 
         # Determine if any hourly position was inside the bounding box

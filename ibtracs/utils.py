@@ -22,7 +22,9 @@ def earthdist(p1, p2):
     lat1, lon1 = np.radians(p1[0]), np.radians(p1[1])
     lat2, lon2 = np.radians(p2[0]), np.radians(p2[1])
     # Compute distance
-    arg = np.sin(lat1)*np.sin(lat2) + np.cos(lat1)*np.cos(lat2)*np.cos(np.abs(lon2-lon1))
+    arg = np.sin(lat1) * np.sin(lat2) + np.cos(lat1) * np.cos(lat2) * np.cos(
+        np.abs(lon2 - lon1)
+    )
     # Floating-point error may result in a slightly out-of-bounds
     # argument for arccos (domain -1 to +1). Round all incorrect arguments
     if type(arg) is np.ndarray:
@@ -34,5 +36,5 @@ def earthdist(p1, p2):
         elif arg < -1:
             arg = -1
     central_angle = np.arccos(arg)
-    d = R*central_angle
+    d = R * central_angle
     return d
