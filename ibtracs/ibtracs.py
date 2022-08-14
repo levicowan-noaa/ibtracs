@@ -208,7 +208,9 @@ class Ibtracs:
             ), 'JSON files do not exist'
             self.load_from_json()
         elif source == 'csv':
-            assert os.path.exists(os.path.join(self.datadir, 'ibtracs.csv'))
+            assert os.path.exists(
+                os.path.join(self.datadir, 'ibtracs.csv')
+            ), 'CSV file does not exist'
             self.load_from_csv()
         else:
             raise ValueError(f'Unrecognized source: {source}')
