@@ -121,8 +121,9 @@ class Ibtracs:
             # on the fly to avoid loading the entire file at once
             stormlines = []
             linenum = 0
+            line = ''
             # Skip first two header lines
-            for i in range(3):
+            for _ in range(3):
                 line = f.readline()
                 linenum += 1
             oldID = None
