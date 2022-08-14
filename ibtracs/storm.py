@@ -3,10 +3,12 @@ __all__ = ['Storm']
 from datetime import datetime
 import json
 import logging
+from typing import Optional
 import numpy as np
+from numpy.typing import NDArray
 from ibtracs.utils import earthdist
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class Storm:
@@ -102,6 +104,38 @@ class Storm:
             self._parse_db(data)
         else:
             raise ValueError(f'Unrecognized input datatype: {datatype}')
+
+        self.agencies: NDArray[np.str_]
+        self.ATCF_ID: Optional[str]
+        self.basin: str
+        self.basins: NDArray[np.str_]
+        self.classification: NDArray[np.str_]
+        self.dist2land: NDArray[np.float_]
+        self.ID: str
+        self.genesis: datetime
+        self.lon: NDArray[np.float_]
+        self.lat: NDArray[np.float_]
+        self.mslp: NDArray[np.float_]
+        self.name: str
+        self.R34_NE: NDArray[np.float_]
+        self.R34_SE: NDArray[np.float_]
+        self.R34_SW: NDArray[np.float_]
+        self.R34_NW: NDArray[np.float_]
+        self.R50_NE: NDArray[np.float_]
+        self.R50_SE: NDArray[np.float_]
+        self.R50_SW: NDArray[np.float_]
+        self.R50_NW: NDArray[np.float_]
+        self.R64_NE: NDArray[np.float_]
+        self.R64_SE: NDArray[np.float_]
+        self.R64_SW: NDArray[np.float_]
+        self.R64_NW: NDArray[np.float_]
+        self.rmw: NDArray[np.float_]
+        self.season: int
+        self.speed: NDArray[np.float_]
+        self.subbasin: str
+        self.subbasins: NDArray[np.str_]
+        self.time: NDArray[np.datetime64]
+        self.wind: NDArray[np.float_]
 
     def __eq__(self, other):
         # Have to compare starting TC location too since two TCs named "NOT_NAMED"
@@ -220,9 +254,9 @@ class Storm:
         # 40 degrees between two track points to cross that line)
         minlon, maxlon = min(self.lon), max(self.lon)
         if minlon * maxlon <= 0 and abs(maxlon) < 140:
-            self.lon = [lon + 360 if lon >= 0 else lon for lon in self.lon]
+            self.lon = np.array([lon + 360 if lon >= 0 else lon for lon in self.lon])
         # Make sure lon is defined in [0,360] not [-180,180] to avoid problems across dateline
-        self.lon = [lon + 360 if lon < 0 else lon for lon in self.lon]
+        self.lon = np.array([lon + 360 if lon < 0 else lon for lon in self.lon])
 
         # Define date/time of genesis as the first track point at which the
         # classification is not 'DS' (disturbance) or 'NR' (not rated)
@@ -242,6 +276,8 @@ class Storm:
             fields = [field.strip() for field in line.split(',')]
             if fields[6] == t0str:
                 break
+        else:
+            raise RuntimeError('could not find first track point')
         self.ID = fields[0]
         self.ATCF_ID = fields[18] or None
         self.name = fields[5]
